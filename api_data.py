@@ -46,28 +46,38 @@ def get_player_data():
 
 def get_teams_data():
     teams_data = api_request(FPL_DATA)
-    list = []
-    required_fields = ['id','name', 'strength_overall_home','strength_overall_away','strength_attack_home','strength_attack_away','strength_defence_home','strength_defence_away']
+    list_teams = []
+    required_fields = ['id','name', 'short_name','strength_overall_home','strength_overall_away','strength_attack_home','strength_attack_away','strength_defence_home','strength_defence_away']
     for team in teams_data['teams']:
         dict_team_data = {key:value for key, value in team.items() if key in required_fields}
-        list.append(dict_team_data)
+        list_teams.append(dict_team_data)
     df = pd.DataFrame(list)
-    return df
-
-
-def get_fixtures_data():
-    fixtures
+    print(df)
 
 
 def get_fixures_data():
     fixtures_data = api_request(FPL_FIXTURES)
-    return fixtures_data
+    required_fields = ['event','team_h', 'team_a']
+    dict_fixtures= {}
+    list_fixtures = []
+    for fixture in fixtures_data:
+        if fixture['event'] is not None:
+            dict_fixtures = {key:value for key,value in fixture.items() if key in required_fields}
+            list_fixtures.append(dict_fixtures)
+    df = pd.DataFrame(list_fixtures)
+    print(df)
 
-
-
-
+def get_players_data():
+    fpl_data = api_request(FPL_DATA)
+    required_fields = ['id', 'first_name', 'second_name']
+    list = []
+    for data in fpl_data['elements']:
+        dict2 = {key:value for key, value in data.items() if key in required_fields}
+        list.append(dict2)
+    df = pd.DataFrame(list)
+    return df
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    get_teams_data()
+    get_players_data()
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

@@ -1,10 +1,10 @@
 import requests
-import pandas
+import pandas as pd
 
 ##### GLOBAL VARIABLES #######
-URL_PLAYER='https://fantasy.premierleague.com/api/bootstrap-static/'
-LOGIN_URL = "https://users.premierleague.com/accounts/login/"
-
+FPL_DATA = 'https://fantasy.premierleague.com/api/bootstrap-static/'
+FPL_FIXTURES = 'https://fantasy.premierleague.com/api/fixtures/'
+LOGIN_URL = 'https://users.premierleague.com/accounts/login/'
 
 # API connection data
 headers = {
@@ -22,12 +22,14 @@ headers = {
    'referer': 'https://fantasy.premierleague.com/my-team' ,
    'accept-language': 'en-US,en;q=0.9,he;q=0.8' ,
 }
+
 payload = {
     'login':'matijadomjan@gmail.com',
     'password':'matac1111',
     'redirect_uri': 'https://fantasy.premierleague.com/',
     'app':'plfpl-web'
 }
+
 s = requests.session()
 s.post(LOGIN_URL, data=payload, headers=headers)
 
@@ -39,8 +41,27 @@ def api_request(url_link):
 
 # Getting players data
 def get_player_data():
-    player_data = api_request(URL_PLAYER)
+    player_data = api_request(FPL_DATA)
     print(player_data)
+
+def get_teams_data():
+    teams_data = api_request(FPL_DATA)
+    list = []
+    required_fields = ['id','name', 'strength_overall_home','strength_overall_away','strength_attack_home','strength_attack_away','strength_defence_home','strength_defence_away']
+    for team in teams_data['teams']:
+        dict_team_data = {key:value for key, value in team.items() if key in required_fields}
+        list.append(dict_team_data)
+    df = pd.DataFrame(list)
+    return df
+
+
+def get_fixtures_data():
+    fixtures
+
+
+def get_fixures_data():
+    fixtures_data = api_request(FPL_FIXTURES)
+    return fixtures_data
 
 
 
@@ -48,5 +69,5 @@ def get_player_data():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    get_player_data()
+    get_teams_data()
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

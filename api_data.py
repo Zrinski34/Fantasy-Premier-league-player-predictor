@@ -1,11 +1,19 @@
 import requests
 import pandas as pd
+import elo_ranking
 
 ##### GLOBAL VARIABLES #######
+
+
 FPL_DATA = 'https://fantasy.premierleague.com/api/bootstrap-static/'
 FPL_FIXTURES = 'https://fantasy.premierleague.com/api/fixtures/'
 LOGIN_URL = 'https://users.premierleague.com/accounts/login/'
+MY_TEAM = 'https://fantasy.premierleague.com/api/my-team/1423649/'
 
+
+
+pd.set_option('display.max_columns', None)
+pd.set_option('mode.chained_assignment', None)
 # API connection data
 headers = {
    'authority': 'users.premierleague.com' ,
@@ -24,7 +32,7 @@ headers = {
 }
 
 payload = {
-    'login':'matijadomjan@gmail.com',
+    'login':'johnny04.matija@gmail.com',
     'password':'matac1111',
     'redirect_uri': 'https://fantasy.premierleague.com/',
     'app':'plfpl-web'
@@ -33,17 +41,14 @@ payload = {
 s = requests.session()
 s.post(LOGIN_URL, data=payload, headers=headers)
 
+
 # API Request function
 def api_request(url_link):
     response = s.get(url_link)
     fpl_data = response.json()
     return fpl_data
 
-# Getting players data
-def get_player_data():
-    player_data = api_request(FPL_DATA)
-    print(player_data)
-
+# Getting teams data
 def get_teams_data():
     teams_data = api_request(FPL_DATA)
     list_teams = []
@@ -51,33 +56,65 @@ def get_teams_data():
     for team in teams_data['teams']:
         dict_team_data = {key:value for key, value in team.items() if key in required_fields}
         list_teams.append(dict_team_data)
-    df = pd.DataFrame(list)
-    print(df)
+    df = pd.DataFrame(list_teams)
+    df = df.replace(to_replace=['Spurs','Man Utd'],value =['Tottenham','Man United'])
+    return df
 
-
-def get_fixures_data():
+# Getting teams data
+def get_fixures():
     fixtures_data = api_request(FPL_FIXTURES)
     required_fields = ['event','team_h', 'team_a']
-    dict_fixtures= {}
     list_fixtures = []
     for fixture in fixtures_data:
         if fixture['event'] is not None:
             dict_fixtures = {key:value for key,value in fixture.items() if key in required_fields}
             list_fixtures.append(dict_fixtures)
     df = pd.DataFrame(list_fixtures)
-    print(df)
+    return df
+
+def get_fixures_data():
+    new_order = [0,2,1,3,4]
+    df_fixtures = get_fixures()
+    df_teams_data = get_teams_data()
+    df_away = pd.merge(df_fixtures, df_teams_data[['id', 'name']],left_on='team_a',right_on='id',how='inner')
+    df_home = pd.merge(df_away, df_teams_data[['id', 'name','strength_overall_home','strength_overall_away']],left_on='team_h',right_on='id',how='inner')
+    df_home.rename(columns = { 'name_x':'away_team', 'name_y':'home_team'}, inplace = True, errors='ignore')
+    df_fixtures = df_home.sort_values(by='event', ascending=True)
+    df_fixtures = df_fixtures.drop(['id_x', 'id_y','team_a','team_h'], axis = 1)
+    df_fixtures = df_fixtures[df_fixtures.columns[new_order]]
+    return df_fixtures
+
+
+
 
 def get_players_data():
     fpl_data = api_request(FPL_DATA)
-    required_fields = ['id', 'first_name', 'second_name']
+    required_fields = ['id','first_name','second_name','team','ict_index', 'influence_rank', 'influence_rank_type','creativity_rank','creativity_rank_type', 'threat_rank', 'total_points','now_cost','selected_by_percent', 'minutes', 'points_per_game','total_points', 'goals_scored','assists','clean_sheets','goals_conceded']
     list = []
     for data in fpl_data['elements']:
         dict2 = {key:value for key, value in data.items() if key in required_fields}
         list.append(dict2)
-    df = pd.DataFrame(list)
-    return df
+    players = pd.DataFrame(list)
+    teams = get_teams_data()
+    players_data = pd.merge(players, teams[['id', 'name']],left_on='team',right_on='id',how='inner')
+    return players_data
 
-# Press the green button in the gutter to run the script.
+
+def get_players_my_current_element():
+    my_team_elements = [559,234,224,585,256,368,141,22,251,359,180,146,20,503,450]
+    return my_team_elements
+
+
+def get_current_players_data():
+    my_team_element = get_players_my_current_element()
+    players = get_players_data()
+    df_player_data = players[players['id_x'].isin(my_team_element)]
+    df_player_data.rename(columns = { 'id_x':'fpl_id', 'name':'club'}, inplace = True, errors='ignore')
+    df_player_data = df_player_data.drop(['team', 'id_y'], axis = 1)
+    print(df_player_data)
+
 if __name__ == '__main__':
-    get_players_data()
+    get_fixures_elo_renking()
+
+
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

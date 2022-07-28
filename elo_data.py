@@ -2,17 +2,16 @@ import pandas as pd
 import soccerdata as sd
 import api_data
 
-
 elo = sd.ClubElo()
 elo_width = 400
-pd.set_option('display.max_columns', None)
-pd.set_option('mode.chained_assignment', None)
+#pd.set_option('display.max_columns', None)
+#pd.set_option('mode.chained_assignment', None)
 
 def get_elo():
     current_elo = elo.read_by_date()
     data_frame = (current_elo.loc[current_elo['league'] == 'ENG-Premier League'])
     df_elo = data_frame.drop(columns=['league'], axis = 1)
-    df_elo_pl = df_elo.replace(to_replace='Tottenham', value ='Spurs')
+    df_elo_pl = df_elo.replace(to_replace=['Tottenham'], value =['Spurs'])
     return df_elo_pl
 
 def get_fixures_elo_renking():
@@ -42,6 +41,7 @@ def fixtures_elo_prediction():
     fixures_elo_renking = get_fixures_elo_renking()
     fixures_elo_renking['home_prediction'] = expected_result_home(fixures_elo_renking['home_team_elo'],fixures_elo_renking['away_team_elo']) * 100
     fixures_elo_renking['away_prediction'] = expected_result_away(fixures_elo_renking['home_team_elo'],fixures_elo_renking['away_team_elo']) * 100
+    fixures_elo_renking['prediction_difference'] = abs(fixures_elo_renking['home_prediction']-fixures_elo_renking['away_prediction'])
     return fixures_elo_renking
 
 

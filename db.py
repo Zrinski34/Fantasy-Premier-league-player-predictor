@@ -11,11 +11,9 @@ dbconn = psycopg2.connect("dbname={} host={} port={} user={} password={}".format
                                                                                  "postgres"))
 
 
-
-def execute_values(dbconn, df, table):
+def insert_dataframe(dbconn, df, table):
     tuples = [tuple(x) for x in df.to_numpy()]
     cols = ','.join(list(df.columns))
-    # SQL query to execute
     query = "INSERT INTO %s(%s) VALUES %%s" % (table, cols)
     cursor = dbconn.cursor()
     try:
@@ -30,7 +28,19 @@ def execute_values(dbconn, df, table):
     cursor.close()
 
 
+def get_week():
+    cursor = dbconn.cursor()
+    try:
+        query = """select max(week) from %s""" % TABLE_CURRENT_FPL_TEAM
+        cursor.execute(query)
+        week = cursor.fetchone()[0]
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error: %s" % error)
+    cursor.close()
+    week=1 if week == None else week+1
+    return week
+
 
 if __name__ == '__main__':
     df = api_data.get_current_players_data()
-    execute_values(dbconn,df,TABLE_CURRENT_FPL_TEAM)
+    insert_dataframe(dbconn,df,TABLE_CURRENT_FPL_TEAM)

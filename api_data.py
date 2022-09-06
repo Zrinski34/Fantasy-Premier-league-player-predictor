@@ -91,7 +91,7 @@ def get_fixures_data():
 
 def get_players_data():
     fpl_data = api_request(FPL_DATA)
-    required_fields = ['id','first_name','second_name','team','ict_index', 'influence_rank', 'influence_rank_type','creativity_rank','creativity_rank_type', 'threat_rank', 'total_points','now_cost','selected_by_percent', 'minutes', 'points_per_game','total_points', 'goals_scored','assists','clean_sheets','goals_conceded']
+    required_fields = ['id','first_name','second_name','team','ict_index','ict_index_rank', 'influence_rank', 'influence_rank_type','creativity_rank','creativity_rank_type', 'threat_rank', 'total_points','now_cost','selected_by_percent', 'minutes', 'points_per_game','total_points', 'goals_scored','assists','clean_sheets','goals_conceded']
     player_dataframe = prepare_dataframe(fpl_data['elements'],required_fields)
     teams = get_teams_data()
     players_data_dataframe = pd.merge(player_dataframe, teams[['id', 'name']],left_on='team',right_on='id',how='inner')
